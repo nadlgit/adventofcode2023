@@ -1,4 +1,3 @@
-import { start } from 'repl';
 import { getInputReadlineInterface, runDay } from '../utils';
 
 const exampleFilename = 'example-input.txt';
@@ -7,29 +6,34 @@ runDay(
   {
     example: { filename: exampleFilename, expected: 4361 },
     solveFn: (filename) => sumPartNumbers(filename),
+  },
+  {
+    example: { filename: exampleFilename, expected: 467835 },
+    solveFn: (filename) => sumGearRatios(filename),
   }
-  // {
-  //   example: { filename: exampleFilename, expected: 467835 },
-  //   solveFn: (filename) => null,
-  // }
 );
 
 type Position = [number, number];
 
+type SchematicNumber = { value: number; start: Position; end: Position };
+
 type Schematic = {
   width: number;
   height: number;
-  symbols: Position[];
-  numbers: { value: number; start: Position; end: Position }[];
+  symbols: Record<string, Position[]>;
+  numbers: SchematicNumber[];
 };
 
-const isSamePosition = ([x1, y1]: Position, [x2, y2]: Position) => x1 === x2 && y1 === y2;
+type Gear = {
+  pos: Position;
+  partNumbers: [SchematicNumber, SchematicNumber];
+};
 
 async function parseSchematic(filename: string) {
   const schematic: Schematic = {
     width: 0,
     height: 0,
-    symbols: [],
+    symbols: {},
     numbers: [],
   };
   const rl = getInputReadlineInterface(filename);
@@ -45,7 +49,8 @@ async function parseSchematic(filename: string) {
           end: [x, matchEnd - 1],
         });
       } else {
-        schematic.symbols.push([x, matchStart]);
+        if (!schematic.symbols[matchValue]) schematic.symbols[matchValue] = [];
+        schematic.symbols[matchValue].push([x, matchStart]);
       }
     }
     x++;
@@ -55,48 +60,43 @@ async function parseSchematic(filename: string) {
   return schematic;
 }
 
-function getNumberAdjacentPositions({
-  numStart,
-  numEnd,
+function isAdjacentNumber({
+  pos: [posX, posY],
+  num: {
+    start: [numX, numStartY],
+    end: [, numEndY],
+  },
   schematicWidth,
   schematicHeight,
 }: {
-  numStart: Position;
-  numEnd: Position;
+  pos: Position;
+  num: SchematicNumber;
   schematicWidth: number;
   schematicHeight: number;
 }) {
-  const [numX, numStartY] = numStart;
-  const numEndY = numEnd[1];
-  const minX = Math.max(numX - 1, 0);
-  const maxX = Math.min(numX + 1, schematicHeight - 1);
-  const minY = Math.max(numStartY - 1, 0);
-  const maxY = Math.min(numEndY + 1, schematicWidth - 1);
-  const adjacent: Position[] = [];
-  for (let x = minX; x <= maxX; x++) {
-    for (let y = minY; y <= maxY; y++) {
-      if (x !== numX || y < numStartY || y > numEndY) {
-        adjacent.push([x, y]);
+  for (let x = Math.max(posX - 1, 0); x <= Math.min(posX + 1, schematicHeight - 1); x++) {
+    for (let y = Math.max(posY - 1, 0); y <= Math.min(posY + 1, schematicWidth - 1); y++) {
+      if ((x !== posX || y !== posY) && x === numX && y >= numStartY && y <= numEndY) {
+        return true;
       }
     }
   }
-  return adjacent;
+  return false;
 }
 
 function getPartNumbers(schematic: Schematic) {
   const partNumbers = schematic.numbers
     .filter((num) => {
-      const adjacent = getNumberAdjacentPositions({
-        numStart: num.start,
-        numEnd: num.end,
-        schematicWidth: schematic.width,
-        schematicHeight: schematic.height,
-      });
-      for (const adj of adjacent) {
-        for (const symbol of schematic.symbols) {
-          if (isSamePosition(adj, symbol)) {
-            return true;
-          }
+      for (const pos of Object.values(schematic.symbols).flatMap((pos) => pos)) {
+        if (
+          isAdjacentNumber({
+            pos,
+            num,
+            schematicWidth: schematic.width,
+            schematicHeight: schematic.height,
+          })
+        ) {
+          return true;
         }
       }
       return false;
@@ -109,4 +109,36 @@ async function sumPartNumbers(filename: string) {
   const schematic = await parseSchematic(filename);
   const partNumbers = getPartNumbers(schematic);
   return partNumbers.reduce((acc, n) => acc + n, 0);
+}
+
+function getGears(schematic: Schematic) {
+  const gears: Gear[] = schematic.symbols['*']
+    .map((pos) => {
+      const partNumbers: SchematicNumber[] = [];
+      for (const num of schematic.numbers) {
+        if (
+          isAdjacentNumber({
+            pos,
+            num,
+            schematicWidth: schematic.width,
+            schematicHeight: schematic.height,
+          })
+        ) {
+          partNumbers.push(num);
+        }
+      }
+      return { pos, partNumbers };
+    })
+    .filter(({ partNumbers }) => partNumbers.length === 2)
+    .map((gear) => gear as Gear);
+  return gears;
+}
+
+async function sumGearRatios(filename: string) {
+  const schematic = await parseSchematic(filename);
+  const gears = getGears(schematic);
+  const gearsRatios = gears.map(
+    ({ partNumbers: [{ value: value1 }, { value: value2 }] }) => value1 * value2
+  );
+  return gearsRatios.reduce((acc, n) => acc + n, 0);
 }
