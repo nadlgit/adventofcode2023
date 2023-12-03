@@ -1,22 +1,17 @@
-import { getInputLines } from '../utils';
+import { getInputLines, runDay } from '../utils';
 
-const inputs = {
-  real: 'puzzle-input.txt',
-  example1: 'example-input1.txt',
-  example2: 'example-input2.txt',
-};
+const exampleFilename = { part1: 'example-input1.txt', part2: 'example-input2.txt' };
 
-function readInputs(namePart1: string, namePart2?: string) {
-  const getFilePath = (filename: string) => `${__dirname}/${filename}`;
-  const inputDataPart1 = getInputLines(getFilePath(namePart1));
-  const inputDataPart2 =
-    namePart2 === undefined
-      ? []
-      : namePart2 === namePart1
-      ? inputDataPart1
-      : getInputLines(getFilePath(namePart2));
-  return { inputDataPart1, inputDataPart2 };
-}
+runDay(
+  {
+    example: { filename: exampleFilename.part1, expected: 142 },
+    solveFn: (filename) => sumCalibrationValues(getInputLines(filename)),
+  },
+  {
+    example: { filename: exampleFilename.part2, expected: 281 },
+    solveFn: (filename) => sumCalibrationValues(translateSpelledValues(getInputLines(filename))),
+  }
+);
 
 function sumCalibrationValues(input: string[]): number {
   return input
@@ -54,15 +49,3 @@ function translateSpelledValues(input: string[]): string[] {
     return translated;
   });
 }
-
-// MAIN
-
-const inputPart1 = inputs.real;
-const inputPart2 = inputs.real;
-const { inputDataPart1, inputDataPart2 } = readInputs(inputPart1, inputPart2);
-
-const result1 = sumCalibrationValues(inputDataPart1);
-console.log(`Part1 (${inputPart1}):`, result1);
-
-const result2 = sumCalibrationValues(translateSpelledValues(inputDataPart2));
-console.log(`Part2 (${inputPart2}):`, result2);

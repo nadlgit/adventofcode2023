@@ -1,21 +1,18 @@
-import { getInputLines } from '../utils';
+import { getInputLines, runDay } from '../utils';
 
-const inputs = {
-  real: 'puzzle-input.txt',
-  example: 'example-input.txt',
-};
+const exampleFilename = 'example-input.txt';
 
-function readInputs(namePart1: string, namePart2?: string) {
-  const getFilePath = (filename: string) => `${__dirname}/${filename}`;
-  const inputDataPart1 = getInputLines(getFilePath(namePart1));
-  const inputDataPart2 =
-    namePart2 === undefined
-      ? []
-      : namePart2 === namePart1
-      ? inputDataPart1
-      : getInputLines(getFilePath(namePart2));
-  return { inputDataPart1, inputDataPart2 };
-}
+runDay(
+  {
+    example: { filename: exampleFilename, expected: 8 },
+    solveFn: (filename) =>
+      sumPossibleGamesIds(getInputLines(filename), { red: 12, green: 13, blue: 14 }),
+  },
+  {
+    example: { filename: exampleFilename, expected: 2286 },
+    solveFn: (filename) => sumMinSetsPower(getInputLines(filename)),
+  }
+);
 
 type CubeSet = { red: number; green: number; blue: number };
 type Game = { id: number; sets: CubeSet[] };
@@ -61,15 +58,3 @@ function sumMinSetsPower(input: string[]): number {
     .map(({ red, green, blue }) => red * green * blue)
     .reduce((acc, curr) => acc + curr, 0);
 }
-
-// MAIN
-
-const inputPart1 = inputs.real;
-const inputPart2 = inputs.real;
-const { inputDataPart1, inputDataPart2 } = readInputs(inputPart1, inputPart2);
-
-const result1 = sumPossibleGamesIds(inputDataPart1, { red: 12, green: 13, blue: 14 });
-console.log(`Part1 (${inputPart1}):`, result1);
-
-const result2 = sumMinSetsPower(inputDataPart2);
-console.log(`Part2 (${inputPart2}):`, result2);
