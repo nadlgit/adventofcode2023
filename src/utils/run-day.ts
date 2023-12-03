@@ -9,11 +9,13 @@ export function runDay<T>(
     value instanceof Promise ? value.then((val) => handleValue(val)) : handleValue(value);
   parts.forEach(
     ({ solveFn, example: { filename: exampleFilename, expected: exampleExpected } }, idx) => {
-      console.log(`*** Part${idx + 1} ***`);
+      const partNum = idx + 1;
       handleSolvePromise(solveFn(exampleFilename), (value) =>
-        console.log('Example check:', 'result=', value, 'expected=', exampleExpected)
+        console.log(`Part${partNum} example check:`, 'result=', value, 'expected=', exampleExpected)
       );
-      handleSolvePromise(solveFn(puzzleFilename), (value) => console.log('Puzzle result:', value));
+      handleSolvePromise(solveFn(puzzleFilename), (value) =>
+        console.log(`Part${partNum} puzzle result:`, value)
+      );
     }
   );
 }

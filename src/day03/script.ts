@@ -24,11 +24,6 @@ type Schematic = {
   numbers: SchematicNumber[];
 };
 
-type Gear = {
-  pos: Position;
-  partNumbers: [SchematicNumber, SchematicNumber];
-};
-
 async function parseSchematic(filename: string) {
   const schematic: Schematic = {
     width: 0,
@@ -112,7 +107,7 @@ async function sumPartNumbers(filename: string) {
 }
 
 function getGears(schematic: Schematic) {
-  const gears: Gear[] = schematic.symbols['*']
+  const gears = schematic.symbols['*']
     .map((pos) => {
       const partNumbers: SchematicNumber[] = [];
       for (const num of schematic.numbers) {
@@ -129,8 +124,7 @@ function getGears(schematic: Schematic) {
       }
       return { pos, partNumbers };
     })
-    .filter(({ partNumbers }) => partNumbers.length === 2)
-    .map((gear) => gear as Gear);
+    .filter(({ partNumbers }) => partNumbers.length === 2);
   return gears;
 }
 
