@@ -7,9 +7,12 @@ if (!dayDir) {
   console.error('Directory argument not provided (example: day01)');
   process.exit(1);
 }
-const scriptPath = join('dist', dayDir, 'script.js');
-if (!existsSync(scriptPath)) {
-  console.error(`File "${scriptPath}" not found`);
+
+const scriptNameWithoutExt = 'script';
+const tsScriptPath = join('src', dayDir, scriptNameWithoutExt + '.ts');
+const jsScriptPath = join('dist', dayDir, scriptNameWithoutExt + '.js');
+if (!existsSync(tsScriptPath)) {
+  console.error(`File "${tsScriptPath}" not found`);
   process.exit(1);
 }
-execSync(`node ${scriptPath}`, { stdio: 'inherit' });
+execSync(`tsc-watch --onSuccess "node ${jsScriptPath}"`, { stdio: 'inherit' });
