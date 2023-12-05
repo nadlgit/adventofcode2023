@@ -1,3 +1,4 @@
+/* eslint-env node */
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';

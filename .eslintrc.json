@@ -1,5 +1,5 @@
 {
-  "ignorePatterns": ["node_modules", "dist", "src/_template", "index.mjs"],
+  "ignorePatterns": ["node_modules", "dist", "src/_template"],
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
