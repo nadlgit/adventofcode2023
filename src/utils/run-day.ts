@@ -1,10 +1,11 @@
+import { puzzleFilename } from './file';
+
 export function runDay<T>(
   ...parts: {
     example: { filename: string; expected: T };
     solveFn: (filename: string) => T | Promise<T>;
   }[]
 ) {
-  const puzzleFilename = 'puzzle-input.txt';
   const handleSolvePromise = (value: T | Promise<T>, handleValue: (value: T) => void) =>
     value instanceof Promise ? value.then((val) => handleValue(val)) : handleValue(value);
   parts.forEach(
