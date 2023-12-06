@@ -29,13 +29,10 @@ function countWinningWays({ time, record }: { time: number; record: number }) {
   // given r is race time, r is record and x is hold time
   // equation is x² - tx + r < 0, with 0 < x < t
   const discriminant = time ** 2 - 4 * record;
-  const solutions = [
-    Math.abs((-time - Math.sqrt(discriminant)) / 2),
-    Math.abs((-time + Math.sqrt(discriminant)) / 2),
-  ];
+  const solutions = [(time - Math.sqrt(discriminant)) / 2, (time + Math.sqrt(discriminant)) / 2];
   const holdTimeMin = Math.floor(Math.min(...solutions)) + 1;
   const holdTimeMax = Math.ceil(Math.max(...solutions)) - 1;
-  return holdTimeMax - holdTimeMin + 1;
+  return holdTimeMax >= holdTimeMin ? holdTimeMax - holdTimeMin + 1 : 0;
 }
 
 function getWinningWaysProduct(filename: string) {
