@@ -53,7 +53,7 @@ function getHandType(hand: string, jokersRule?: boolean): HandType {
   const JOKER = jokersRule ? 'J' : '';
   const jokersCount = handCards.find(([card]) => card === JOKER)?.[1] ?? 0;
   const counts = handCards.filter(([card]) => card !== JOKER).map(([, count]) => count);
-  const firstCount = counts.length > 0 ? counts[0] + jokersCount : jokersCount;
+  const firstCount = (counts.length > 0 ? counts[0] : 0) + jokersCount;
   const secondCount = counts.length > 1 ? counts[1] : 0;
 
   if (firstCount === 5) return 'Five of a kind';
