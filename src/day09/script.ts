@@ -29,9 +29,15 @@ function extrapolateBoundValues(sequence: number[]) {
     );
     boundValues.push(seqBoundValues(currSeq));
   }
-  boundValues.reverse();
-  const nextValue = boundValues.map(([, last]) => last).reduce((acc, n) => n + acc, 0);
-  const prevValue = boundValues.map(([first]) => first).reduce((acc, n) => n - acc, 0);
+  const { nextValue, prevValue } = boundValues
+    .reverse()
+    .reduce(
+      ({ nextValue, prevValue }, [first, last]) => ({
+        nextValue: last + nextValue,
+        prevValue: first - prevValue,
+      }),
+      { nextValue: 0, prevValue: 0 }
+    );
   return { nextValue, prevValue };
 }
 
