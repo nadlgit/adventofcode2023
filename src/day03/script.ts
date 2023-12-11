@@ -4,11 +4,11 @@ const exampleFilename = 'example-input.txt';
 
 runDay(
   {
-    example: { filename: exampleFilename, expected: 4361 },
+    examples: [{ filename: exampleFilename, expected: 4361 }],
     solveFn: (filename) => sumPartNumbers(filename),
   },
   {
-    example: { filename: exampleFilename, expected: 467835 },
+    examples: [{ filename: exampleFilename, expected: 467835 }],
     solveFn: (filename) => sumGearRatios(filename),
   }
 );

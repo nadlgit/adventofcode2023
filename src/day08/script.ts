@@ -6,17 +6,16 @@ const exampleFilename = {
   part2: 'example-input3.txt',
 };
 
-runDay({
-  example: { filename: exampleFilename.part1Exple1, expected: 2 },
-  solveFn: (filename) => countNavigationSteps(filename),
-});
 runDay(
   {
-    example: { filename: exampleFilename.part1Exple2, expected: 6 },
+    examples: [
+      { filename: exampleFilename.part1Exple1, expected: 2 },
+      { filename: exampleFilename.part1Exple2, expected: 6 },
+    ],
     solveFn: (filename) => countNavigationSteps(filename),
   },
   {
-    example: { filename: exampleFilename.part2, expected: 6 },
+    examples: [{ filename: exampleFilename.part2, expected: 6 }],
     solveFn: (filename) => countNavigationSteps(filename, true),
   }
 );

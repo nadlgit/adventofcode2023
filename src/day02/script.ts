@@ -4,12 +4,12 @@ const exampleFilename = 'example-input.txt';
 
 runDay(
   {
-    example: { filename: exampleFilename, expected: 8 },
+    examples: [{ filename: exampleFilename, expected: 8 }],
     solveFn: (filename) =>
       sumPossibleGamesIds(getInputLines(filename), { red: 12, green: 13, blue: 14 }),
   },
   {
-    example: { filename: exampleFilename, expected: 2286 },
+    examples: [{ filename: exampleFilename, expected: 2286 }],
     solveFn: (filename) => sumMinSetsPower(getInputLines(filename)),
   }
 );

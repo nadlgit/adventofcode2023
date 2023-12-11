@@ -9,33 +9,21 @@ const exampleFilename = {
   part2Exple4: 'example-input6.txt',
 };
 
-runDay({
-  example: { filename: exampleFilename.part1Exple1, expected: 4 },
-  solveFn: (filename) => calcFarthestPointSteps(filename),
-});
-runDay({
-  example: { filename: exampleFilename.part1Exple2, expected: 8 },
-  solveFn: (filename) => calcFarthestPointSteps(filename),
-});
 runDay(
   {
-    example: { filename: exampleFilename.part1Exple1, expected: null },
-    solveFn: () => null,
+    examples: [
+      { filename: exampleFilename.part1Exple1, expected: 4 },
+      { filename: exampleFilename.part1Exple2, expected: 8 },
+    ],
+    solveFn: (filename) => calcFarthestPointSteps(filename),
   },
   {
-    example: { filename: exampleFilename.part2Exple1, expected: 4 },
-    solveFn: (filename) => countTilesEnclosed(filename),
-  },
-  {
-    example: { filename: exampleFilename.part2Exple2, expected: 4 },
-    solveFn: (filename) => countTilesEnclosed(filename),
-  },
-  {
-    example: { filename: exampleFilename.part2Exple3, expected: 8 },
-    solveFn: (filename) => countTilesEnclosed(filename),
-  },
-  {
-    example: { filename: exampleFilename.part2Exple4, expected: 10 },
+    examples: [
+      { filename: exampleFilename.part2Exple1, expected: 4 },
+      { filename: exampleFilename.part2Exple2, expected: 4 },
+      { filename: exampleFilename.part2Exple3, expected: 8 },
+      { filename: exampleFilename.part2Exple4, expected: 10 },
+    ],
     solveFn: (filename) => countTilesEnclosed(filename),
   }
 );

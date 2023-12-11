@@ -4,11 +4,11 @@ const exampleFilename = 'example-input.txt';
 
 runDay(
   {
-    example: { filename: exampleFilename, expected: 114 },
+    examples: [{ filename: exampleFilename, expected: 114 }],
     solveFn: (filename) => sumExtrapolatedNextValues(filename),
   },
   {
-    example: { filename: exampleFilename, expected: 2 },
+    examples: [{ filename: exampleFilename, expected: 2 }],
     solveFn: (filename) => sumExtrapolatedPrevValues(filename),
   }
 );
@@ -29,15 +29,13 @@ function extrapolateBoundValues(sequence: number[]) {
     );
     boundValues.push(seqBoundValues(currSeq));
   }
-  const { nextValue, prevValue } = boundValues
-    .reverse()
-    .reduce(
-      ({ nextValue, prevValue }, [first, last]) => ({
-        nextValue: last + nextValue,
-        prevValue: first - prevValue,
-      }),
-      { nextValue: 0, prevValue: 0 }
-    );
+  const { nextValue, prevValue } = boundValues.reverse().reduce(
+    ({ nextValue, prevValue }, [first, last]) => ({
+      nextValue: last + nextValue,
+      prevValue: first - prevValue,
+    }),
+    { nextValue: 0, prevValue: 0 }
+  );
   return { nextValue, prevValue };
 }
 

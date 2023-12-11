@@ -4,11 +4,11 @@ const exampleFilename = 'example-input.txt';
 
 runDay(
   {
-    example: { filename: exampleFilename, expected: 288 },
+    examples: [{ filename: exampleFilename, expected: 288 }],
     solveFn: (filename) => getWinningWaysProduct(filename),
   },
   {
-    example: { filename: exampleFilename, expected: 71503 },
+    examples: [{ filename: exampleFilename, expected: 71503 }],
     solveFn: (filename) => getWinningWaysCount(filename),
   }
 );

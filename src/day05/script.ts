@@ -4,11 +4,11 @@ const exampleFilename = 'example-input.txt';
 
 runDay(
   {
-    example: { filename: exampleFilename, expected: 35 },
+    examples: [{ filename: exampleFilename, expected: 35 }],
     solveFn: (filename) => findLowestLocation(filename),
   },
   {
-    example: { filename: exampleFilename, expected: 46 },
+    examples: [{ filename: exampleFilename, expected: 46 }],
     solveFn: (filename) => findRangesLowestLocation(filename),
   }
 );

@@ -4,11 +4,11 @@ const exampleFilename = { part1: 'example-input1.txt', part2: 'example-input2.tx
 
 runDay(
   {
-    example: { filename: exampleFilename.part1, expected: 142 },
+    examples: [{ filename: exampleFilename.part1, expected: 142 }],
     solveFn: (filename) => sumCalibrationValues(getInputLines(filename)),
   },
   {
-    example: { filename: exampleFilename.part2, expected: 281 },
+    examples: [{ filename: exampleFilename.part2, expected: 281 }],
     solveFn: (filename) => sumCalibrationValues(translateSpelledValues(getInputLines(filename))),
   }
 );
