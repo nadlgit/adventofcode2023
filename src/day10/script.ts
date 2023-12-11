@@ -17,28 +17,28 @@ runDay({
   example: { filename: exampleFilename.part1Exple2, expected: 8 },
   solveFn: (filename) => calcFarthestPointSteps(filename),
 });
-// runDay(
-//   {
-//     example: { filename: exampleFilename.part1Exple1, expected: null },
-//     solveFn: (filename) => null,
-//   },
-//   {
-//     example: { filename: exampleFilename.part2Exple1, expected: 4 },
-//     solveFn: (filename) => null,
-//   },
-//   {
-//     example: { filename: exampleFilename.part2Exple2, expected: 4 },
-//     solveFn: (filename) => null,
-//   },
-//   {
-//     example: { filename: exampleFilename.part2Exple3, expected: 8 },
-//     solveFn: (filename) => null,
-//   },
-//   {
-//     example: { filename: exampleFilename.part2Exple4, expected: 10 },
-//     solveFn: (filename) => null,
-//   }
-// );
+runDay(
+  {
+    example: { filename: exampleFilename.part1Exple1, expected: null },
+    solveFn: () => null,
+  },
+  {
+    example: { filename: exampleFilename.part2Exple1, expected: 4 },
+    solveFn: (filename) => countTilesEnclosed(filename),
+  },
+  {
+    example: { filename: exampleFilename.part2Exple2, expected: 4 },
+    solveFn: (filename) => countTilesEnclosed(filename),
+  },
+  {
+    example: { filename: exampleFilename.part2Exple3, expected: 8 },
+    solveFn: (filename) => countTilesEnclosed(filename),
+  },
+  {
+    example: { filename: exampleFilename.part2Exple4, expected: 10 },
+    solveFn: (filename) => countTilesEnclosed(filename),
+  }
+);
 
 type Direction = 'N' | 'S' | 'W' | 'E';
 type Tile = {
@@ -52,7 +52,7 @@ function parseInput(filename: string) {
   const tiles = getInputLines(filename).map((line, rowIdx) =>
     (line.split('') as Tile['value'][]).map((value, colIdx) => {
       if (value === 'S') startPos = [rowIdx, colIdx];
-      const tile: Tile = { value, isInLoop: value === 'S', loopConnections: [] };
+      const tile: Tile = { value, isInLoop: false, loopConnections: [] };
       return tile;
     })
   );
@@ -115,35 +115,86 @@ function detectLoop(filename: string) {
   const { tiles, nbRows, nbCols, startPos } = parseInput(filename);
 
   let currPosList = [startPos];
+  let boundFound = false;
   let boundsSteps = 0;
-  while (currPosList.length > 1 || boundsSteps === 0) {
-    const nextPosList: [number, number][] = [];
+  while (!boundFound) {
     currPosList.forEach(([currRow, currCol]) => {
-      const tileConnections = findTileConnections({
-        tilePos: [currRow, currCol],
-        tiles,
-        nbRows,
-        nbCols,
-      });
-      tiles[currRow][currCol].loopConnections.push(...tileConnections);
-      nextPosList.push(
-        ...tileConnections
+      tiles[currRow][currCol].isInLoop = true;
+      tiles[currRow][currCol].loopConnections.push(
+        ...findTileConnections({
+          tilePos: [currRow, currCol],
+          tiles,
+          nbRows,
+          nbCols,
+        })
+      );
+    });
+
+    if (currPosList.length < 2 && !currPosList.includes(startPos)) {
+      boundFound = true;
+      continue;
+    }
+
+    currPosList = currPosList.reduce(
+      (acc, [currRow, currCol]) => [
+        ...acc,
+        ...tiles[currRow][currCol].loopConnections
           .map(({ row, col }) => [row, col] as [number, number])
           .filter(
             ([row, col]) =>
               !tiles[row][col].isInLoop &&
-              nextPosList.every(([nextRow, nextCol]) => nextRow !== row || nextCol !== col)
-          )
-      );
-    });
-    nextPosList.forEach(([row, col]) => {
-      tiles[row][col].isInLoop = true;
-    });
-    currPosList = nextPosList;
+              acc.every(([nextRow, nextCol]) => nextRow !== row || nextCol !== col)
+          ),
+      ],
+      [] as [number, number][]
+    );
     boundsSteps++;
   }
 
   return { tiles, nbRows, nbCols, startPos, boundsSteps };
+}
+
+function findLoopVertices(tiles: Tile[][], startPos: [number, number]) {
+  const isLoopVertex = ({ value, isInLoop, loopConnections }: Tile) => {
+    const bends: Tile['value'][] = ['L', 'J', '7', 'F'] as const;
+    return (
+      isInLoop &&
+      (bends.includes(value) ||
+        (value === 'S' &&
+          bends.some((bend) =>
+            loopConnections.every(({ dir }) => isPossibleTileDirection(bend, dir))
+          )))
+    );
+  };
+
+  let prevPos: [number, number] | undefined = undefined;
+  let currPos = startPos;
+  const vertices: [number, number][] = [];
+  while (!prevPos || currPos[0] !== startPos[0] || currPos[1] !== startPos[1]) {
+    const tile = tiles[currPos[0]][currPos[1]];
+    if (isLoopVertex(tile)) {
+      vertices.push(currPos);
+    }
+    const nextPos = tile.loopConnections
+      .map(({ row, col }) => [row, col] as [number, number])
+      .find(([row, col]) => !prevPos || row !== prevPos[0] || col !== prevPos[1])!;
+    prevPos = currPos;
+    currPos = nextPos;
+  }
+  return vertices;
+}
+
+function shoelaceArea(vertices: [number, number][]) {
+  // https://en.wikipedia.org/wiki/Shoelace_formula
+  return (
+    Math.abs(
+      vertices.reduce((acc, [row, col], idx) => {
+        const nextIdx = idx < vertices.length - 1 ? idx + 1 : 0;
+        const [nextRow, nextCol] = vertices[nextIdx];
+        return acc + row * nextCol - col * nextRow;
+      }, 0)
+    ) / 2
+  );
 }
 
 function calcFarthestPointSteps(filename: string) {
@@ -152,12 +203,15 @@ function calcFarthestPointSteps(filename: string) {
 }
 
 function countTilesEnclosed(filename: string) {
-  // const { tiles, nbRows, nbCols, startPos, boundsSteps } = detectLoop(filename);
-  // let count = 0;
-  // return count;
+  // https://en.wikipedia.org/wiki/Pick%27s_theorem
+  const { tiles, startPos } = detectLoop(filename);
+  const loopVertices = findLoopVertices(tiles, startPos);
+  const loopBoundaryPoints = loopVertices.reduce((acc, [row, col], idx) => {
+    const prevIdx = idx === 0 ? loopVertices.length - 1 : idx - 1;
+    const [prevRow, prevCol] = loopVertices[prevIdx];
+    return acc + Math.abs(row - prevRow) + Math.abs(col - prevCol);
+  }, 0);
+  const loopArea = shoelaceArea(loopVertices);
+  const loopInteriorPoints = loopArea - loopBoundaryPoints / 2 + 1;
+  return loopInteriorPoints;
 }
-// countTilesEnclosed(exampleFilename.part2Exple1);
-// countTilesEnclosed(exampleFilename.part2Exple2);
-// countTilesEnclosed(exampleFilename.part2Exple3);
-// countTilesEnclosed(exampleFilename.part2Exple4);
-// countTilesEnclosed(puzzleFilename);
