@@ -8,8 +8,8 @@ runDay(
     solveFn: (filename) => sumPossibleArrangements(filename),
   },
   {
-    examples: [{ filename: exampleFilename, expected: null }],
-    solveFn: (filename) => null,
+    examples: [{ filename: exampleFilename, expected: 525152 }],
+    solveFn: (filename) => sumUnfoldPossibleArrangements(filename),
   }
 );
 
@@ -64,6 +64,21 @@ function makeArrangemements(str: string, count: number): string[] {
   return [];
 }
 
+function isValidArrangement({
+  record,
+  damagedGroups,
+  arrangement,
+}: SpringRow & { arrangement: string }) {
+  const pattern = '^\\.*' + damagedGroups.map((n) => `#{${n}}`).join('\\.+') + '\\.*$';
+  return (
+    new RegExp(pattern).test(arrangement) &&
+    arrangement
+      .padEnd(record.length, '.')
+      .split('')
+      .every((char, idx) => char === record[idx] || record[idx] === '?')
+  );
+}
+
 function calcArrangements({ record, damagedGroups }: SpringRow) {
   let arrangements: string[] = [''];
   for (let i = 0; i < damagedGroups.length; i++) {
@@ -71,10 +86,27 @@ function calcArrangements({ record, damagedGroups }: SpringRow) {
       makeArrangemements(record.substring(arr.length), damagedGroups[i]).map((a) => arr + a)
     );
   }
-  return arrangements;
+  return arrangements.filter((arrangement) =>
+    isValidArrangement({ record, damagedGroups, arrangement })
+  );
 }
 
 async function sumPossibleArrangements(filename: string) {
   const springRows = await parseInput(filename);
   return springRows.reduce((acc, row) => acc + calcArrangements(row).length, 0);
+}
+
+async function sumUnfoldPossibleArrangements(filename: string) {
+  const springRows = await parseInput(filename);
+  const unfoldSpringRows = springRows.map(({ record, damagedGroups }) => ({
+    record: record + ('?' + record).repeat(4),
+    damagedGroups: [
+      ...damagedGroups,
+      ...damagedGroups,
+      ...damagedGroups,
+      ...damagedGroups,
+      ...damagedGroups,
+    ],
+  }));
+  return unfoldSpringRows.reduce((acc, row) => acc + calcArrangements(row).length, 0);
 }
