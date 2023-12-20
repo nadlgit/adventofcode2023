@@ -8,13 +8,16 @@ runDay(
     solveFn: (filename) => sumAcceptedPartsRating(filename),
   },
   {
-    examples: [{ filename: exampleFilename, expected: null }],
-    solveFn: (filename) => null,
+    examples: [{ filename: exampleFilename, expected: 167409079868000 }],
+    solveFn: (filename) => countAcceptedRatingCombinations(filename),
   }
 );
 
 type Part = Record<string, number>;
-type Rule = { str: string; conditionFn: (part: Part) => boolean; destination: string };
+type Rule = {
+  condition: { category: string; operator: string; value: number } | null;
+  destination: string;
+};
 
 function parseInput(filename: string) {
   const lines = getInputLines(filename);
@@ -22,15 +25,12 @@ function parseInput(filename: string) {
   const parseRule = (rule: string) => {
     const [ruleLeft, ruleRight] = rule.split(':');
     const destination = ruleRight || ruleLeft;
-    let conditionFn: Rule['conditionFn'] = () => false;
+    let condition: Rule['condition'] = null;
     if (ruleRight) {
       const [category, operator, value] = ruleLeft.match(/(\w+)([^\w])(\d+)/)!.splice(1);
-      if (operator === '<') conditionFn = (part) => part[category] < parseInt(value);
-      if (operator === '>') conditionFn = (part) => part[category] > parseInt(value);
-    } else {
-      conditionFn = () => true;
+      condition = { category, operator, value: parseInt(value) };
     }
-    return { str: rule, conditionFn, destination };
+    return { condition, destination };
   };
   const workflows = lines
     .filter((line) => /^\w/.test(line))
@@ -51,14 +51,37 @@ function parseInput(filename: string) {
   return { workflows, parts };
 }
 
+function splitRange(range: [number, number], value: number, operator: string) {
+  let inside: [number, number] | null = null;
+  let outside: [number, number] | null = null;
+  if ((operator === '<' && value <= range[0]) || (operator === '>' && value >= range[1])) {
+    outside = range;
+  } else if ((operator === '<' && value > range[1]) || (operator === '>' && value < range[0])) {
+    inside = range;
+  } else if (operator === '<') {
+    const bound = Math.max(value - 1, range[0]);
+    inside = [range[0], bound];
+    outside = [bound + 1, range[1]];
+  } else if (operator === '>') {
+    const bound = Math.min(value + 1, range[1]);
+    inside = [bound, range[1]];
+    outside = [range[0], bound - 1];
+  }
+  return { inside, outside };
+}
+
 function sumAcceptedPartsRating(filename: string) {
   const { workflows, parts } = parseInput(filename);
   const accepted: Part[] = [];
   for (const part of parts) {
     let current = 'in';
     while (!['A', 'R'].includes(current)) {
-      for (const { conditionFn, destination } of workflows[current]) {
-        if (conditionFn(part)) {
+      for (const { condition, destination } of workflows[current]) {
+        if (
+          !condition ||
+          (condition.operator === '<' && part[condition.category] < condition.value) ||
+          (condition.operator === '>' && part[condition.category] > condition.value)
+        ) {
           current = destination;
           break;
         }
@@ -69,4 +92,9 @@ function sumAcceptedPartsRating(filename: string) {
     }
   }
   return accepted.reduce((acc, part) => acc + part['x'] + part['m'] + part['a'] + part['s'], 0);
+}
+
+function countAcceptedRatingCombinations(filename: string) {
+  const { workflows } = parseInput(filename);
+  return 0;
 }
