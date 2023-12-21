@@ -67,8 +67,12 @@ function parseInput(filename: string) {
   return modules;
 }
 
-function pressButton(modules: Module[]) {
+function pressButton(
+  modules: Module[],
+  outputToCheck: { moduleName: string; pulse: Pulse }[] = []
+) {
   const pulseCount: Record<Pulse, number> = { low: 0, high: 0 };
+  const outputTriggered = new Set<(typeof outputToCheck)[number]>();
   const queue: { srcModule: string; destModule: string; pulse: Pulse }[] = [
     { srcModule: '', destModule: 'broadcaster', pulse: 'low' },
   ];
@@ -96,9 +100,15 @@ function pressButton(modules: Module[]) {
       for (const dest of module.destination) {
         queue.push({ srcModule: destModule, destModule: dest, pulse: moduleOutput });
       }
+      const check = outputToCheck.find(
+        ({ moduleName, pulse }) => moduleName === destModule && pulse === moduleOutput
+      );
+      if (check) {
+        outputTriggered.add(check);
+      }
     }
   }
-  return pulseCount;
+  return { ...pulseCount, outputTriggered };
 }
 
 function multiplyFinalPulses(filename: string) {
@@ -114,6 +124,27 @@ function multiplyFinalPulses(filename: string) {
 }
 
 function findRxTriggerPressCount(filename: string) {
+  // In my personal input rx predecessors are: rx <- dt <- dl, ks, pm, vk
+  // dt, dl, ks, pm, vk are all conjonctions modules
+  // dl, ks, pm, vk each have only 1 conjonction module as predecessor: ts, vr, pf, xd
+  // So we need to output a low pulse from ts, vr, pf, xd at same time
   const moduleConfiguration = parseInput(filename);
-  return 0;
+  const outputToCheck: { moduleName: string; pulse: Pulse }[] = [
+    { moduleName: 'ts', pulse: 'low' },
+    { moduleName: 'vr', pulse: 'low' },
+    { moduleName: 'pf', pulse: 'low' },
+    { moduleName: 'xd', pulse: 'low' },
+  ];
+  const outputMinPressCount: Record<string, number> = {};
+  let pressCount = 0;
+  while (Object.keys(outputMinPressCount).length < outputToCheck.length) {
+    pressCount++;
+    const { outputTriggered } = pressButton(moduleConfiguration, outputToCheck);
+    for (const { moduleName } of outputTriggered) {
+      if (!outputMinPressCount[moduleName]) {
+        outputMinPressCount[moduleName] = pressCount;
+      }
+    }
+  }
+  return Object.values(outputMinPressCount).reduce((acc, count) => acc * count, 1);
 }
