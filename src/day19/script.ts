@@ -18,6 +18,12 @@ type Rule = {
   condition: { category: string; operator: string; value: number } | null;
   destination: string;
 };
+type RatingRange = {
+  x: [number, number];
+  m: [number, number];
+  a: [number, number];
+  s: [number, number];
+};
 
 function parseInput(filename: string) {
   const lines = getInputLines(filename);
@@ -96,5 +102,60 @@ function sumAcceptedPartsRating(filename: string) {
 
 function countAcceptedRatingCombinations(filename: string) {
   const { workflows } = parseInput(filename);
-  return 0;
+  const queue: {
+    workflowName: string;
+    ratingRange: RatingRange;
+  }[] = [
+    { workflowName: 'in', ratingRange: { x: [1, 4000], m: [1, 4000], a: [1, 4000], s: [1, 4000] } },
+  ];
+  const accepted: RatingRange[] = [];
+
+  while (queue.length > 0) {
+    const { workflowName, ratingRange } = queue.shift()!;
+    for (const { condition, destination } of workflows[workflowName]) {
+      let nextIn: (typeof queue)[number] | undefined;
+      let nextOut: (typeof queue)[number] | undefined;
+      if (condition) {
+        const { category, operator, value } = condition;
+        const { inside, outside } = splitRange(
+          ratingRange[category as keyof typeof ratingRange],
+          value,
+          operator
+        );
+        if (inside) {
+          nextIn = {
+            workflowName: destination,
+            ratingRange: { ...ratingRange, [category]: inside },
+          };
+          if (outside) {
+            nextOut = {
+              workflowName,
+              ratingRange: { ...ratingRange, [category]: outside },
+            };
+          }
+        }
+      } else {
+        nextIn = { workflowName: destination, ratingRange };
+      }
+      if (nextOut) {
+        queue.push(nextOut);
+      }
+      if (nextIn && nextIn.workflowName !== 'R') {
+        if (nextIn.workflowName === 'A') {
+          accepted.push(nextIn.ratingRange);
+        } else {
+          queue.push(nextIn);
+        }
+      }
+      if (nextIn) {
+        break;
+      }
+    }
+  }
+
+  return accepted.reduce(
+    (acc, ratingRange) =>
+      acc + Object.values(ratingRange).reduce((racc, [start, end]) => racc * (end - start + 1), 1),
+    0
+  );
 }
